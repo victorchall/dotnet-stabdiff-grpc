@@ -1,75 +1,109 @@
-﻿using Grpc.Core;
-using Grpc.Net.Client;
-using StabilityDiffusionConsole;
-using System.Text;
-using static Grpc.Core.Metadata;
+﻿using StabilityDiffusionConsole;
+using StabilitySdkClient;
+using System.CommandLine;
 
-const string API_SERVER_ADDRESS = "https://grpc.stability.ai:443";
-
-var (request, localAppArgs) = ArgParser.ParseRequest(args);
-var requestId = Guid.NewGuid().ToString();
-
-var metadata = new Metadata() { new Entry("authorization", $"Bearer {localAppArgs.ApiKey}")};
-
-Console.WriteLine($"{DateTime.Now}: Generated request. Request id: {requestId}, prompt: '{request.Prompt.FirstOrDefault()?.Text}', h:{request.Image.Height}, w:{request.Image.Width}");
-
-var answersExt = new List<Answer>();
-
-using var channel = GrpcChannel.ForAddress(API_SERVER_ADDRESS);
+Action<Answer, string> writeAnswerPayloadToDiskAction = async (a, outdir) =>
 {
-    var client = new GenerationService.GenerationServiceClient(channel);
-    
-    request.RequestId = requestId;
-    request.RequestedType = ArtifactType.ArtifactImage; // needed? assumed? 
+    var saveMimeTypesWithExtension = new Dictionary<string, string>();
+    saveMimeTypesWithExtension.Add("image/png", "png");
+    saveMimeTypesWithExtension.Add("image/jpg", "jpg");
 
-    var reply = client.Generate(request, metadata);
-    var answers = reply.ResponseStream.ReadAllAsync();
-    try 
-    {
-        await foreach(var answer in answers)
-        {
-#if DEBUG
-            if (!answer.Artifacts.Any()) Console.WriteLine($"{DateTime.Now}: Keepalive received");
-#endif
+    int i = 0;
 
-            // TODO: write files as we go? easier to debug just setting them aside for now
-            answersExt.Add(answer);
-        }
-    }
-    catch (RpcException ex) when (ex.StatusCode == StatusCode.Unauthenticated)
-    {
-        Console.WriteLine($"{DateTime.Now}: Authorization failed.  Check API key.  Aborting.");
-    }
-}
+    if (!Directory.Exists(outdir)) Directory.CreateDirectory(outdir);
 
-int i = 0;
-
-var writeFileTasks = new List<Task>();
-
-var saveMimeTypesWithExtension = new Dictionary<string, string>();
-saveMimeTypesWithExtension.Add("image/png", "png");
-saveMimeTypesWithExtension.Add("image/jpg", "jpg");
-
-foreach (var answer in answersExt)
-{
-    foreach (var artifact in answer.Artifacts)
+    foreach (var artifact in a.Artifacts)
     {
         if (saveMimeTypesWithExtension.ContainsKey(artifact.Mime))
         {
             var ext = saveMimeTypesWithExtension[artifact.Mime];
 
-            string fileMask = $"{i++:D5}.{ext}";
+            string fileMask = $"{outdir}{i++:D5}.{ext}";
             while (File.Exists(fileMask))
             {
-                fileMask = $"{i++:D5}.{ext}";
+                fileMask = $"{outdir}{i++:D5}.{ext}";
             }
             Console.WriteLine($"{DateTime.Now}: writing image/{ext}: {fileMask}");
 
-            // TODO: consider filename based on prompt, seed, etc. or arg based
-            writeFileTasks.Add(File.WriteAllBytesAsync(fileMask, artifact.Binary.ToByteArray()));
+            // TODO: consider filename based on prompt, seed, outdir, etc. or arg based
+            await File.WriteAllBytesAsync($"{fileMask}", artifact.Binary.ToByteArray());
         }
     }
-}
+};
 
-// TODO: probably wont do this async?
-Task.WaitAll(writeFileTasks.ToArray());
+var heightOption = new Option<ulong>(
+    aliases: new string[] { "--h", "-h" },
+    description: "Height of the image to be created in pixels.",
+    getDefaultValue: () => 512);
+
+var widthOption = new Option<ulong>(
+    aliases: new string[] { "--w", "-w" },
+    description: "Width of the image to be created in pixels.",
+    getDefaultValue: () => 512);
+
+var stepsOption = new Option<ulong>(
+    aliases: new string[] { "--steps", "-steps", "--ddim_steps", "-ddim_steps" },
+    description: "Steps",
+    getDefaultValue: () => 30);
+
+var promptOption = new Option<string>(
+    aliases: new string[] { "--prompt", "-prompt" },
+    description: "Text prompt.",
+    getDefaultValue: () => "A gold plated cat horse on a table top");
+
+var engineOption = new Option<string>(
+    aliases: new string[] { "--engine", "-engine" },
+    description: "engine",
+    getDefaultValue: () => "stable-diffusion-v1-5"
+    );
+
+var apiKeyOption = new Option<string>(
+    aliases: new string[] { "--apikey", "-apikey" },
+    description: "Your API Key",
+    getDefaultValue: () => string.Empty
+    );
+
+var outDirOption = new Option<string>(
+    aliases: new string[] { "--outdir", "-outdir" },
+    description: "Output directory",
+    getDefaultValue: () => "output/"
+    );
+
+var generateCommand = new RootCommand("command line args")
+    {
+        heightOption,
+        widthOption,
+        promptOption,
+        engineOption,
+        stepsOption,
+        outDirOption,
+        apiKeyOption
+    };
+
+generateCommand.SetHandler(async (h, w, prompt, engineId, steps, apiKey, outdir) =>
+{
+    var request = new Request();
+
+    request.Prompt.Add(new Prompt() { Text = prompt });
+    request.Image = new ImageParameters
+    {
+        Height = h,
+        Width = w,
+        Steps = steps,
+        Transform = new TransformType { Diffusion = DiffusionSampler.SamplerKEuler },
+        Samples = 1
+    };
+    request.EngineId = engineId;
+
+    if (!outdir.EndsWith("/")) outdir = $"{outdir}/";
+
+    if (!Directory.Exists(outdir)) Directory.CreateDirectory(outdir);
+
+    var generatorClient = new GeneratorClient();
+    var metadata = GeneratorClient.CreateMetaDataWithApiKey(apiKey);
+
+    await generatorClient.Generate(request, metadata, (answer) => writeAnswerPayloadToDiskAction(answer, outdir));
+},
+heightOption, widthOption, promptOption, engineOption, stepsOption, apiKeyOption, outDirOption);
+
+await generateCommand.InvokeAsync(args);
