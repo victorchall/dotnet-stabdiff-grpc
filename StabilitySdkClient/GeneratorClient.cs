@@ -9,32 +9,37 @@ namespace StabilitySdkClient
     {
         const string API_SERVER_ADDRESS = "https://grpc.stability.ai:443";
 
-        public static Metadata CreateMetaDataWithApiKey(string apikey)
+        public GeneratorClient(Request request, Metadata metadata)
+        {
+            Request = request;
+            Metadata = metadata;
+        }
+
+        public Request Request { get; }
+        public Metadata Metadata { get; }
+
+        public static Metadata CreateMetaData(string apikey)
         {
            return new Metadata() { new Entry("authorization", $"Bearer {apikey}") };
         }
 
-        public async Task Generate(Request request, Metadata metadata, Action<Answer> actionForAnswers)
+        public async Task Generate(Action<Answer> answerHandler)
         {
-            var requestId = Guid.NewGuid().ToString();
-
             using var channel = GrpcChannel.ForAddress(API_SERVER_ADDRESS);
             {
                 var client = new GenerationService.GenerationServiceClient(channel);
 
-                request.RequestId = requestId;
-                request.RequestedType = ArtifactType.ArtifactImage; // needed? assumed? 
+                Request.RequestedType = ArtifactType.ArtifactImage; // needed? assumed? 
 
-                var reply = client.Generate(request, metadata);
+                var reply = client.Generate(Request, Metadata);
                 var answers = reply.ResponseStream.ReadAllAsync();
                 try
                 {
                     await foreach (var answer in answers)
                     {
-#if DEBUG
                         if (!answer.Artifacts.Any()) Console.WriteLine($"{DateTime.Now}: Keepalive received");
-#endif
-                        actionForAnswers(answer);
+
+                        answerHandler(answer);
                     }
                 }
                 catch (RpcException ex) when (ex.StatusCode == StatusCode.Unauthenticated)

@@ -2,15 +2,16 @@
 using StabilitySdkClient;
 using System.CommandLine;
 
-Action<Answer, string> writeAnswerPayloadToDiskAction = async (a, outdir) =>
+Action<Answer, string> answerHandler = async (a, outdir) =>
 {
     var saveMimeTypesWithExtension = new Dictionary<string, string>();
     saveMimeTypesWithExtension.Add("image/png", "png");
-    saveMimeTypesWithExtension.Add("image/jpg", "jpg");
 
     int i = 0;
 
     if (!Directory.Exists(outdir)) Directory.CreateDirectory(outdir);
+
+    Console.WriteLine($"{DateTime.Now}: Received Answer, request id: {a.RequestId}, node: {a.Meta?.NodeId}, gpu id: {a.Meta?.GpuId}, engine: {a.Meta?.EngineId}");
 
     foreach (var artifact in a.Artifacts)
     {
@@ -23,9 +24,9 @@ Action<Answer, string> writeAnswerPayloadToDiskAction = async (a, outdir) =>
             {
                 fileMask = $"{outdir}{i++:D5}.{ext}";
             }
-            Console.WriteLine($"{DateTime.Now}: writing image/{ext}: {fileMask}");
+            Console.WriteLine($"{DateTime.Now}: Received image. Seed: {artifact.Seed}, id: {artifact.Id}, finish reason: {artifact.FinishReason}");
+            Console.WriteLine($"{DateTime.Now}: Writing: {fileMask}");
 
-            // TODO: consider filename based on prompt, seed, outdir, etc. or arg based
             await File.WriteAllBytesAsync($"{fileMask}", artifact.Binary.ToByteArray());
         }
     }
@@ -69,6 +70,12 @@ var outDirOption = new Option<string>(
     getDefaultValue: () => "output/"
     );
 
+var samplerOption = new Option<string>(
+    aliases: new string[] { "--sampler", "-sampler" },
+    description: "Sampler option: [ddim, plms, k_euler, k_euler_acenstral, k_dpm_2, klms, k_heun]",
+    getDefaultValue: () => string.Empty
+    );
+
 var generateCommand = new RootCommand("command line args")
     {
         heightOption,
@@ -80,9 +87,50 @@ var generateCommand = new RootCommand("command line args")
         apiKeyOption
     };
 
-generateCommand.SetHandler(async (h, w, prompt, engineId, steps, apiKey, outdir) =>
+static DiffusionSampler CreateDiffusionSampler(string samplerString) =>
+    samplerString switch
+    {
+        /*from beta.dreamstudio.ai, with more lenient options added
+        * a=[{value:Pe.DiffusionSampler.SAMPLER_DDIM,label:"ddim"},
+        * {value:Pe.DiffusionSampler.SAMPLER_DDPM,label:"plms"},
+        * {value:Pe.DiffusionSampler.SAMPLER_K_EULER,label:"k_euler"},
+        * {value:Pe.DiffusionSampler.SAMPLER_K_EULER_ANCESTRAL,label:"k_euler_ancestral"},
+        * {value:Pe.DiffusionSampler.SAMPLER_K_HEUN,label:"k_heun"},
+        * {value:Pe.DiffusionSampler.SAMPLER_K_DPM_2,label:"k_dpm_2"},
+        * {value:Pe.DiffusionSampler.SAMPLER_K_DPM_2_ANCESTRAL,label:"k_dpm_2_ancestral"},
+        * {value:Pe.DiffusionSampler.SAMPLER_K_LMS,:"klms"
+        * */
+        "ddim" => DiffusionSampler.SamplerDdim,
+
+        "plms" => DiffusionSampler.SamplerDdpm,
+
+        "k_euler" => DiffusionSampler.SamplerKEuler,
+
+        "k_euler_a" => DiffusionSampler.SamplerKEulerAncestral,
+        "k_euler_ancestral" => DiffusionSampler.SamplerKEulerAncestral,
+        "keulera" => DiffusionSampler.SamplerKEulerAncestral,
+        "keulerancestral" => DiffusionSampler.SamplerKEulerAncestral,
+
+        "k_heun" => DiffusionSampler.SamplerKHeun,
+        "kheun" => DiffusionSampler.SamplerKHeun,
+
+        "kdpm2a" => DiffusionSampler.SamplerKDpm2Ancestral,
+        "k_dpm_2a" => DiffusionSampler.SamplerKDpm2Ancestral,
+        "k_dpm_2ancentral" => DiffusionSampler.SamplerKDpm2Ancestral,
+
+        "klms" => DiffusionSampler.SamplerKLms,
+        "k_lms" => DiffusionSampler.SamplerKLms,
+        _ => DiffusionSampler.SamplerDdpm
+    };
+
+generateCommand.SetHandler(async (h, w, prompt, engineId, steps, apiKey, outdir, sampler) =>
 {
     var request = new Request();
+
+    var requestId = Guid.NewGuid().ToString();
+    request.RequestId = requestId;
+
+    var samplerEnum = CreateDiffusionSampler(sampler);
 
     request.Prompt.Add(new Prompt() { Text = prompt });
     request.Image = new ImageParameters
@@ -90,7 +138,7 @@ generateCommand.SetHandler(async (h, w, prompt, engineId, steps, apiKey, outdir)
         Height = h,
         Width = w,
         Steps = steps,
-        Transform = new TransformType { Diffusion = DiffusionSampler.SamplerKEuler },
+        Transform = new TransformType { Diffusion = samplerEnum },
         Samples = 1
     };
     request.EngineId = engineId;
@@ -99,11 +147,15 @@ generateCommand.SetHandler(async (h, w, prompt, engineId, steps, apiKey, outdir)
 
     if (!Directory.Exists(outdir)) Directory.CreateDirectory(outdir);
 
-    var generatorClient = new GeneratorClient();
-    var metadata = GeneratorClient.CreateMetaDataWithApiKey(apiKey);
+    Console.WriteLine($"**** Generated RequestRequest id: {requestId} ****");
+    Console.WriteLine($"* Sampler: {samplerEnum}, steps: {steps}, samples: {1}, model: {engineId}");
+    Console.WriteLine($"* h: {h}, w: {w}, prompt:{prompt}");
 
-    await generatorClient.Generate(request, metadata, (answer) => writeAnswerPayloadToDiskAction(answer, outdir));
+    var metadata = GeneratorClient.CreateMetaData(apiKey);
+    var generatorClient = new GeneratorClient(request, metadata);    
+
+    await generatorClient.Generate((answer) => answerHandler(answer, outdir));
 },
-heightOption, widthOption, promptOption, engineOption, stepsOption, apiKeyOption, outDirOption);
+heightOption, widthOption, promptOption, engineOption, stepsOption, apiKeyOption, outDirOption, samplerOption);
 
 await generateCommand.InvokeAsync(args);

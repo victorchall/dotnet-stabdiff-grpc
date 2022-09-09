@@ -48,8 +48,9 @@ To see all parameters supported, run without any parameters.
 
 ## Near term
 
-* Complete common parameters
 * img2img support
+* Alternate console command that uses a config file for params (limited to 9 args with System.Commandline)
+* Complete common parameters
 
 ## Possible Future Updates
 
