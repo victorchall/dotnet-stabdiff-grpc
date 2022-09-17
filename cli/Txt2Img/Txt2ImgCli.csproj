@@ -12,10 +12,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\StabilitySdkClient\StabilitySdkClient.csproj" />
+    <ProjectReference Include="..\..\StabilitySdkClient\StabilitySdkClient.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
 	<Protobuf Include="Protos\generation.proto" GrpcServices="Client" />
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 </Project>

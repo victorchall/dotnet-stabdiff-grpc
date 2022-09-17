@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Txt2ImgCli": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "API_KEY": "your api key"
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 ﻿using Grpc.Core;
 using Grpc.Net.Client;
-using StabilityDiffusionConsole;
 using static Grpc.Core.Metadata;
+using StabilitySdkClient.Generation;
 
 namespace StabilitySdkClient
 {
@@ -18,9 +18,9 @@ namespace StabilitySdkClient
         public Request Request { get; }
         public Metadata Metadata { get; }
 
-        public static Metadata CreateMetaData(string apikey)
+        public static Metadata CreateMetaData(string apiKey)
         {
-           return new Metadata() { new Entry("authorization", $"Bearer {apikey}") };
+           return new Metadata() { new Entry("authorization", $"bearer {apiKey}") };
         }
 
         public async Task Generate(Action<Answer> answerHandler)
@@ -28,8 +28,6 @@ namespace StabilitySdkClient
             using var channel = GrpcChannel.ForAddress(API_SERVER_ADDRESS);
             {
                 var client = new GenerationService.GenerationServiceClient(channel);
-
-                Request.RequestedType = ArtifactType.ArtifactImage; // needed? assumed? 
 
                 var reply = client.Generate(Request, Metadata);
                 var answers = reply.ResponseStream.ReadAllAsync();

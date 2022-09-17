@@ -3,9 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32825.248
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StabilityDiffusionConsole", "StabilityDiffusionConsole\StabilityDiffusionConsole.csproj", "{9481B4E2-A756-4C2E-9482-E1D3E7DA06D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Txt2ImgCli", "cli\Txt2Img\Txt2ImgCli.csproj", "{9481B4E2-A756-4C2E-9482-E1D3E7DA06D0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StabilitySdkClient", "StabilitySdkClient\StabilitySdkClient.csproj", "{1C7CD95D-A115-4741-B2F9-120A619C819E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stability.Messaging", "Stability.Core\Stability.Messaging.csproj", "{7714F40F-11C0-40B1-8132-7AEA762F4462}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Img2ImgCli", "cli\Img2Img\Img2ImgCli.csproj", "{DF05C4F2-CF38-4F9C-8A7F-B42E21E0FBB4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Cli", "Cli", "{4B9FCF03-DFA3-49CD-B796-73E59778D222}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "cli\Common\Common.csproj", "{92095F46-54EF-4420-8513-31D9E495F430}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AWS", "AWS", "{D2E574C0-94B7-4688-82FC-CCFC0CCD2895}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,9 +31,26 @@ Global
 		{1C7CD95D-A115-4741-B2F9-120A619C819E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C7CD95D-A115-4741-B2F9-120A619C819E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C7CD95D-A115-4741-B2F9-120A619C819E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7714F40F-11C0-40B1-8132-7AEA762F4462}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7714F40F-11C0-40B1-8132-7AEA762F4462}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7714F40F-11C0-40B1-8132-7AEA762F4462}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7714F40F-11C0-40B1-8132-7AEA762F4462}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF05C4F2-CF38-4F9C-8A7F-B42E21E0FBB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF05C4F2-CF38-4F9C-8A7F-B42E21E0FBB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF05C4F2-CF38-4F9C-8A7F-B42E21E0FBB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF05C4F2-CF38-4F9C-8A7F-B42E21E0FBB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92095F46-54EF-4420-8513-31D9E495F430}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92095F46-54EF-4420-8513-31D9E495F430}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92095F46-54EF-4420-8513-31D9E495F430}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92095F46-54EF-4420-8513-31D9E495F430}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9481B4E2-A756-4C2E-9482-E1D3E7DA06D0} = {4B9FCF03-DFA3-49CD-B796-73E59778D222}
+		{DF05C4F2-CF38-4F9C-8A7F-B42E21E0FBB4} = {4B9FCF03-DFA3-49CD-B796-73E59778D222}
+		{92095F46-54EF-4420-8513-31D9E495F430} = {4B9FCF03-DFA3-49CD-B796-73E59778D222}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D7324131-B771-438E-A5FA-AF75D5EF0065}
