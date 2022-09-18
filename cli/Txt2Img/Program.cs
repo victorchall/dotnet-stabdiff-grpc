@@ -60,7 +60,7 @@ generateCommand.SetHandler(async (h, w, steps, prompt, engineId, outdir, sampler
     var requestTime = DateTime.Now;
     var handler = AnswerHandlerFactory.GetWriteToDiskHandler(true);
 
-    await generatorClient.Generate((answer) => handler(answer, outdir));
+    await generatorClient.GeneratePictures((answer) => handler(answer, outdir));
 
     Console.WriteLine($"Elapsed total request {requestId} process time: {(DateTime.Now - requestTime).TotalSeconds:F2} s");
 },

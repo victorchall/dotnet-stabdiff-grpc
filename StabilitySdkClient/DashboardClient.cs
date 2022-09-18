@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace StabilitySdkClient
 {
-    public class DashboardClient : AbstractClient
+    public sealed class DashboardClient : AbstractClient
     {
         public DashboardClient(Metadata metadata) : base(metadata)
         {

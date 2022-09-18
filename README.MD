@@ -89,6 +89,11 @@ Result:
     --version                         Show version information
     -?, -h, --help                    Show help and usage information
 
+## Other stuff
+
+* EnginesCli: calls engines endpoint to enumerate all engines available (wink)
+* Dashboard stub (unused, does not currently support 'client credentials' / API_KEY)
+
 ## Near term
 
 * Alternate console command that uses a config file for params (limited to 9 args with System.Commandline)

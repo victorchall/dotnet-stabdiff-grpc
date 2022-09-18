@@ -14,7 +14,7 @@ namespace StabilitySdkClient
             _request = request;
         }
 
-        public async Task Generate(Action<Answer> answerHandler)
+        public async Task GeneratePictures(Action<Answer> answerHandler)
         {
             using var channel = GrpcChannel.ForAddress(API_SERVER_ADDRESS);
             {
