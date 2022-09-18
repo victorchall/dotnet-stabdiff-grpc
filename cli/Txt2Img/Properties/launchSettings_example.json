@@ -2,6 +2,7 @@
   "profiles": {
     "Txt2ImgCli": {
       "commandName": "Project",
+      "commandLineArgs": "--outdir \"C:\\repos\\dotnet-stabdiff-grpc\\output\"",
       "environmentVariables": {
         "API_KEY": "your api key"
       }
