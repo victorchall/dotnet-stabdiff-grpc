@@ -9,16 +9,16 @@ namespace Cli.Common
         private static readonly Option<float> strengthOption =
            new Option<float>(
                aliases: new string[] { "--h", "-h" },
-               description: "Denoising strength to weigh initial image and prompt text for img2img.",
-               getDefaultValue: () => 512);
+               description: "Denoising strength [0,1] to weigh initial image and prompt text for img2img.",
+               getDefaultValue: () => 0.4F);
 
         public static Option<float> StrengthOption => strengthOption;
 
         private static readonly Option<string> initImageOption =
            new Option<string>(
-               aliases: new string[] { "--h", "-h" },
+               aliases: new string[] { "--init-image", "-init-image" },
                description: "Initial image for img2img",
-               getDefaultValue: () => string.Empty);
+               getDefaultValue: () => "output/00000.png");
 
         public static Option<string> InitImageOption => initImageOption;
 
@@ -50,7 +50,7 @@ namespace Cli.Common
             new Option<string>(
                 aliases: new string[] { "--prompt", "-prompt" },
                 description: "Text prompt.",
-                getDefaultValue: () => "a golden cat on a wood table");
+                getDefaultValue: () => "a golden cat on a table");
 
         public static Option<string> PromptOption => promptsOption;
 
@@ -81,7 +81,7 @@ namespace Cli.Common
         private static readonly Option<uint> cntOption =
             new Option<uint>(
                 aliases: new string[] { "--n_samples", "-n_samples", "--n_iter", "-n_iter" },
-                description: "Sampler option: [ddim, plms, k_euler, k_euler_acenstral, k_dpm_2, klms, k_heun]",
+                description: "Number of images to create",
                 getDefaultValue: () => 1);
 
         public static Option<uint> CountOption => cntOption;

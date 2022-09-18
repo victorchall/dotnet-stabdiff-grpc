@@ -49,7 +49,7 @@ generateCommand.SetHandler(async (h, w, steps, prompt, engineId, outdir, sampler
 
     if (!Directory.Exists(outdir)) Directory.CreateDirectory(outdir);
 
-    Console.WriteLine($"{DateTime.Now}: **** Generated RequestRequest id: {requestId} ****");
+    Console.WriteLine($"{DateTime.Now}: **** Generated Txt2Img Request id: {requestId} ****");
     Console.WriteLine($"* sampler: {samplerEnum}, steps: {steps}, samples: {cnt}, model: {engineId}");
     Console.WriteLine($"* H: {h}, W: {w}, prompt: {prompt}");
 
