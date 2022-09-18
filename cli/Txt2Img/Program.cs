@@ -4,6 +4,7 @@ using System;
 using System.CommandLine;
 using System.Text.Json;
 using StabilitySdkClient.Generation;
+using StabilitySdkClient;
 using Cli.Common;
 
 var generateCommand = new RootCommand("command line args")
@@ -53,7 +54,7 @@ generateCommand.SetHandler(async (h, w, steps, prompt, engineId, outdir, sampler
     Console.WriteLine($"* sampler: {samplerEnum}, steps: {steps}, samples: {cnt}, model: {engineId}");
     Console.WriteLine($"* H: {h}, W: {w}, prompt: {prompt}");
 
-    var metadata = GeneratorClient.CreateMetaData(Environment.GetEnvironmentVariable("API_KEY") ?? string.Empty);
+    var metadata = MetadataFactory.CreateMetaData(Environment.GetEnvironmentVariable("API_KEY") ?? string.Empty);
     var generatorClient = new GeneratorClient(request, metadata);
 
     var requestTime = DateTime.Now;

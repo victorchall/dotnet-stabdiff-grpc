@@ -80,7 +80,7 @@ generateCommand.SetHandler(async (steps, prompt, engineId, outdir, sampler, cnt,
             Console.WriteLine($"* sampler: {samplerEnum}, steps: {steps}, samples: {cnt}, model: {engineId}, initImg: {initImgPath}, str: {str}");
             Console.WriteLine($"* H: {initImage.Height}, W: {initImage.Width}, prompt: {prompt}");
 
-            var metadata = GeneratorClient.CreateMetaData(Environment.GetEnvironmentVariable("API_KEY") ?? string.Empty);
+            var metadata = MetadataFactory.CreateMetaData(Environment.GetEnvironmentVariable("API_KEY") ?? string.Empty);
             var generatorClient = new GeneratorClient(request, metadata);
 
             var requestTime = DateTime.Now;

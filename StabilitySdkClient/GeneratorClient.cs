@@ -5,22 +5,13 @@ using StabilitySdkClient.Generation;
 
 namespace StabilitySdkClient
 {
-    public class GeneratorClient
+    public sealed class GeneratorClient : AbstractClient
     {
-        const string API_SERVER_ADDRESS = "https://grpc.stability.ai:443";
+        private Request _request { get; }
 
-        public GeneratorClient(Request request, Metadata metadata)
+        public GeneratorClient(Request request, Metadata metadata) : base(metadata)
         {
-            Request = request;
-            Metadata = metadata;
-        }
-
-        public Request Request { get; }
-        public Metadata Metadata { get; }
-
-        public static Metadata CreateMetaData(string apiKey)
-        {
-           return new Metadata() { new Entry("authorization", $"bearer {apiKey}") };
+            _request = request;
         }
 
         public async Task Generate(Action<Answer> answerHandler)
@@ -28,9 +19,9 @@ namespace StabilitySdkClient
             using var channel = GrpcChannel.ForAddress(API_SERVER_ADDRESS);
             {
                 var client = new GenerationService.GenerationServiceClient(channel);
-
-                var reply = client.Generate(Request, Metadata);
+                var reply = client.Generate(_request, _metadata);
                 var answers = reply.ResponseStream.ReadAllAsync();
+
                 try
                 {
                     await foreach (var answer in answers)
